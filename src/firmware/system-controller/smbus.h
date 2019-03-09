@@ -36,46 +36,38 @@
 extern "C" {
 #endif
 
-/**
- * \struct SMBus_
- * \brief Abstraction for SMBus Master ASF internal functions.
- * \note Internal structure intended for proper use of namespaces in C.
- * \note Functions are accessed using SMBus.foo(..)
- * \note i2c_master_instance must have been properly initialised beforehand using the
- *       appropriate ASF functions.
- */
+enum status_code smbus_configure( struct i2c_master_module *const i2c_master_instance,
+                                  Sercom *const hw, uint32_t pinmux_sda, uint32_t pinmux_scl,
+                                  uint32_t i2c_speed_khz );
 
-struct SMBus_
-{
-  enum status_code (*configure)( struct i2c_master_module *const i2c_master_instance,
-                                 Sercom *const hw, uint32_t pinmux_sda, uint32_t pinmux_scl,
-                                 uint32_t i2c_speed_khz );
+enum status_code smbus_writeBlock( struct i2c_master_module *const i2c_master_instance, uint8_t device_address,
+                                   uint8_t* data, uint32_t count );
+enum status_code smbus_readBlock( struct i2c_master_module *const i2c_master_instance, uint8_t device_address,
+                                  uint8_t *data, uint32_t count );
 
-  enum status_code (*writeBlock)( struct i2c_master_module *const i2c_master_instance, uint8_t device_address,
-                                  uint8_t* data, uint32_t count );
-  enum status_code (*readBlock)( struct i2c_master_module *const i2c_master_instance, uint8_t device_address,
-                                 uint8_t *data, uint32_t count );
+enum status_code smbus_writeByte( struct i2c_master_module *const i2c_master_instance, uint8_t device_address,
+                                  uint8_t data );
+enum status_code smbus_readByte( struct i2c_master_module *const i2c_master_instance, uint8_t device_address,
+                                 uint8_t* data );
+enum status_code smbus_writeWord( struct i2c_master_module *const i2c_master_instance,
+                                  uint8_t device_address, uint16_t data );
+enum status_code smbus_readWord( struct i2c_master_module *const i2c_master_instance,
+                                 uint8_t device_address, uint16_t* data );
 
-  enum status_code (*writeByte)( struct i2c_master_module *const i2c_master_instance, uint8_t device_address,
-                                 uint8_t data );
-  enum status_code (*readByte)( struct i2c_master_module *const i2c_master_instance, uint8_t device_address,
-                                uint8_t* data );
-  enum status_code (*writeWord)( struct i2c_master_module *const i2c_master_instance,
-                                uint8_t device_address, uint16_t data );
-  enum status_code (*readWord)( struct i2c_master_module *const i2c_master_instance,
-                                uint8_t device_address, uint16_t* data );
-
-  enum status_code (*writeByteData)( struct i2c_master_module *const i2c_master_instance,
-                                     uint8_t device_address, uint8_t cmd, uint8_t data );
-  enum status_code (*readByteData)( struct i2c_master_module *const i2c_master_instance,
-                                    uint8_t device_address, uint8_t cmd, uint8_t* data );
-  enum status_code (*writeWordData)( struct i2c_master_module *const i2c_master_instance,
-                                     uint8_t device_address, uint8_t cmd, uint16_t data );
-  enum status_code (*readWordData)( struct i2c_master_module *const i2c_master_instance,
-                                    uint8_t device_address, uint8_t cmd, uint16_t* data );
-};
-
-extern const struct SMBus_ SMBus;
+enum status_code smbus_writeByteData( struct i2c_master_module *const i2c_master_instance,
+                                      uint8_t device_address, uint8_t cmd, uint8_t data );
+enum status_code smbus_readByteData( struct i2c_master_module *const i2c_master_instance,
+                                     uint8_t device_address, uint8_t cmd, uint8_t* data );
+enum status_code smbus_writeWordData( struct i2c_master_module *const i2c_master_instance,
+                                      uint8_t device_address, uint8_t cmd, uint16_t data );
+enum status_code smbus_readWordData( struct i2c_master_module *const i2c_master_instance,
+                                     uint8_t device_address, uint8_t cmd, uint16_t* data );
+enum status_code smbus_writeBlockData( struct i2c_master_module *const i2c_master_instance,
+                                       uint8_t device_address, uint8_t cmd, uint8_t* data,
+                                       uint32_t count );
+enum status_code smbus_readBlockData( struct i2c_master_module *const i2c_master_instance,
+                                      uint8_t device_address, uint8_t cmd, uint8_t* data,
+                                      uint32_t count );
 
 /**
  * \} end of atmel_samd20_smbus_master_blocking

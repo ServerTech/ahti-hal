@@ -19,51 +19,6 @@
 
 #include "smbus.h"
 
-enum status_code smbus_configure( struct i2c_master_module *const i2c_master_instance,
-                                  Sercom *const hw, uint32_t pinmux_sda, uint32_t pinmux_scl,
-                                  uint32_t i2c_speed_khz );
-
-enum status_code smbus_writeBlock( struct i2c_master_module *const i2c_master_instance, uint8_t device_address,
-                                   uint8_t* data, uint32_t count );
-enum status_code smbus_readBlock( struct i2c_master_module *const i2c_master_instance, uint8_t device_address,
-                                  uint8_t *data, uint32_t count );
-
-enum status_code smbus_writeByte( struct i2c_master_module *const i2c_master_instance, uint8_t device_address,
-                                  uint8_t data );
-enum status_code smbus_readByte( struct i2c_master_module *const i2c_master_instance, uint8_t device_address,
-                                 uint8_t* data );
-enum status_code smbus_writeWord( struct i2c_master_module *const i2c_master_instance,
-                                  uint8_t device_address, uint16_t data );
-enum status_code smbus_readWord( struct i2c_master_module *const i2c_master_instance,
-                                 uint8_t device_address, uint16_t* data );
-
-enum status_code smbus_writeByteData( struct i2c_master_module *const i2c_master_instance,
-                                      uint8_t device_address, uint8_t cmd, uint8_t data );
-enum status_code smbus_readByteData( struct i2c_master_module *const i2c_master_instance,
-                                     uint8_t device_address, uint8_t cmd, uint8_t* data );
-enum status_code smbus_writeWordData( struct i2c_master_module *const i2c_master_instance,
-                                      uint8_t device_address, uint8_t cmd, uint16_t data );
-enum status_code smbus_readWordData( struct i2c_master_module *const i2c_master_instance,
-                                     uint8_t device_address, uint8_t cmd, uint16_t* data );
-
-const struct SMBus_ SMBus =
-{
-  .configure     = smbus_configure,
-
-  .writeBlock    = smbus_writeBlock,
-  .readBlock     = smbus_readBlock,
-
-  .writeByte     = smbus_writeByte,
-  .readByte      = smbus_readByte,
-  .writeWord     = smbus_writeWord,
-  .readWord      = smbus_readWord,
-
-  .writeByteData = smbus_writeByteData,
-  .readByteData  = smbus_readByteData,
-  .writeWordData = smbus_writeWordData,
-  .readWordData  = smbus_readWordData
-};
-
 /**
  * \defgroup atmel_samd20_smbus_master_blocking Atmel SAMD20 SMBus Master Abstraction (blocking)
  * \brief Atmel SAMD20 SMBus Master Abstraction (blocking)
@@ -309,7 +264,7 @@ enum status_code smbus_readByteData( struct i2c_master_module *const i2c_master_
 {
   enum status_code status = STATUS_OK;
 
-  status = smbus_writeByte( i2c_master_instance, device_address, cmd );
+  status |= smbus_writeByte( i2c_master_instance, device_address, cmd );
   status |= smbus_readByte( i2c_master_instance, device_address, data );
 
   return status;
@@ -336,7 +291,7 @@ enum status_code smbus_writeWordData( struct i2c_master_module *const i2c_master
 }
 
 /**
- * \brief Read a single byte of data (from a specific register) from the specified I2C address.
+ * \brief Read a word data (from a specific register) from the specified I2C address.
  *
  * \param [in] i2c_master_instance pointer to the i2c_master_module instance in your main
  *                                 application
@@ -354,6 +309,68 @@ enum status_code smbus_readWordData( struct i2c_master_module *const i2c_master_
 
   status |= smbus_writeByte( i2c_master_instance, device_address, cmd );
   status |= smbus_readWord( i2c_master_instance, device_address, data );
+
+  return status;
+}
+
+/**
+ * \brief Write a block of data (to a specific starting register) to the specified I2C
+ *        address.
+ *
+ * \param [in] i2c_master_instance pointer to the i2c_master_module instance in your main
+ *                                 application
+ * \param [in] device_address 7-bit I2C address of the slave
+ * \param [in] cmd register address/command to send to the slave
+ * \param [in] data block to send to the slave
+ * \param [in] count number of bytes in the block of data
+ *
+ * \note Not really part of the SMBus standard.
+ *
+ * \return status_code enumeration defined in ASF status code abstractions
+ */
+
+enum status_code smbus_writeBlockData( struct i2c_master_module *const i2c_master_instance,
+                                       uint8_t device_address, uint8_t cmd, uint8_t* data,
+                                       uint32_t count )
+{
+  enum status_code status = STATUS_OK;
+
+  uint8_t* write_data = (uint8_t*) malloc( (count+1)*sizeof(uint8_t) );
+  write_data[0] = cmd;
+  for ( unsigned int i = 1; i < count+1; ++i )
+    write_data[i] = data[i-1];
+
+  status = smbus_writeBlock( i2c_master_instance, device_address, write_data, count+1 );
+
+  free( write_data );
+
+  return status;
+}
+
+/**
+ * \brief Read a block of data (from a specific starting register) from the specified I2C
+ *        address.
+ *
+ * \param [in] i2c_master_instance pointer to the i2c_master_module instance in your main
+ *                                 application
+ * \param [in] device_address 7-bit I2C address of the slave
+ * \param [in] cmd register address/command to send to the slave
+ * \param [out] data byte received from the slave
+ * \param [in] count number of bytes to read from the slave
+ *
+ * \note Not really a part of the SMBus standard.
+ *
+ * \return status_code enumeration defined in ASF status code abstractions
+ */
+
+enum status_code smbus_readBlockData( struct i2c_master_module *const i2c_master_instance,
+                                      uint8_t device_address, uint8_t cmd, uint8_t* data,
+                                      uint32_t count )
+{
+  enum status_code status = STATUS_OK;
+
+  status |= smbus_writeByte( i2c_master_instance, device_address, cmd );
+  status |= smbus_readBlock( i2c_master_instance, device_address, data, count );
 
   return status;
 }
